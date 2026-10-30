@@ -1,0 +1,3 @@
+io.github.tanmaysinghx.zynqo.autoconfigure.ZynqoAutoConfiguration
+io.github.tanmaysinghx.zynqo.autoconfigure.metrics.ZynqoMetricsAutoConfiguration
+io.github.tanmaysinghx.zynqo.autoconfigure.web.ZynqoWebMvcAutoConfiguration
