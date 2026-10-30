@@ -1,3 +1,18 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-wordmark-dark.svg">
+    <img src="docs/assets/logo-wordmark-light.svg" alt="Zynqo: Repeat the request. Not the action." width="560">
+  </picture>
+</p>
+
+<p align="center">
+  <a href="https://github.com/tanmaysinghx/zynqo-spring-boot-starter/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/tanmaysinghx/zynqo-spring-boot-starter/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/tanmaysinghx/zynqo-spring-boot-starter/actions/workflows/security.yml"><img alt="Security" src="https://github.com/tanmaysinghx/zynqo-spring-boot-starter/actions/workflows/security.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache%202.0-blue.svg"></a>
+  <img alt="Java 21+" src="https://img.shields.io/badge/Java-21%2B-orange.svg">
+  <img alt="Spring Boot 4.1" src="https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F.svg">
+</p>
+
 # Zynqo
 
 **Repeat the request. Not the action.**

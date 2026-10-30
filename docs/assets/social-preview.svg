@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="Zynqo">
+  <defs>
+    <linearGradient id="sp-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1020"/>
+      <stop offset="1" stop-color="#1E1B4B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#sp-bg)"/>
+  <g transform="translate(120 192)">
+  <defs>
+    <linearGradient id="zq-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4338CA"/>
+      <stop offset="0.55" stop-color="#6D28D9"/>
+      <stop offset="1" stop-color="#0891B2"/>
+    </linearGradient>
+    <linearGradient id="zq-loop" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#5EEAD4"/>
+      <stop offset="1" stop-color="#A5F3FC"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#zq-bg)"/>
+  <!-- The request comes around again... -->
+  <path d="M 186 186 A 80 80 0 1 1 196 84" fill="none" stroke="url(#zq-loop)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 210 106 L 184 92 L 205 74 Z" fill="#A5F3FC" stroke="#A5F3FC" stroke-width="4" stroke-linejoin="round"/>
+  <!-- ...but the action happens once. -->
+  <path d="M 84 86 H 170 L 84 168 H 170" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="186" cy="186" r="12" fill="#FFFFFF"/>
+  </g>
+  <text x="430" y="320" font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="140" font-weight="800" letter-spacing="-3" fill="#F9FAFB">zynqo</text>
+  <text x="436" y="384" font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="38" font-weight="500" fill="#A5F3FC">Repeat the request. Not the action.</text>
+  <text x="436" y="446" font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="26" font-weight="400" fill="#9CA3AF">Distributed API idempotency for Spring Boot · Redis · @Zynqo</text>
+</svg>
