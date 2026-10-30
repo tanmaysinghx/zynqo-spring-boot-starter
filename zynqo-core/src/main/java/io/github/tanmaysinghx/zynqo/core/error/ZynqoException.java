@@ -25,7 +25,7 @@ import java.util.Optional;
  * <p>Messages are written for API clients: they never contain idempotency keys, fingerprints,
  * principals, tenants or payload data.
  */
-public class ZynqoException extends RuntimeException {
+public final class ZynqoException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
 

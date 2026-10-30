@@ -100,6 +100,20 @@ class RedisOutageIT {
   }
 
   @Test
+  void stoppedConnectionFactorySurfacesAsStorageFailure() {
+    try (GenericContainer<?> redis = RedisTestSupport.redisContainer()) {
+      redis.start();
+      LettuceConnectionFactory factory = RedisTestSupport.connectionFactory(redis);
+      RedisIdempotencyStore store = new RedisIdempotencyStore(factory, "zynqo-outage:");
+      factory.destroy();
+
+      assertThatThrownBy(() -> store.release(KEY, new OwnershipToken("o1", 1)))
+          .isInstanceOf(ZynqoStorageException.class)
+          .hasMessageContaining("unexpectedly");
+    }
+  }
+
+  @Test
   void gracefulRestartWithDefaultSnapshottingKeepsCompletedRecords() throws IOException {
     // The stock image saves an RDB snapshot on SIGTERM, so a graceful restart preserves records.
     ClaimResult afterRestart = completeThenRestart(RedisTestSupport.redisContainer());

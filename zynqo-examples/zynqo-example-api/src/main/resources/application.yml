@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: zynqo-example-api
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      # Bound every Redis command: Zynqo fails closed (HTTP 503) instead of hanging.
+      timeout: 500ms
+      connect-timeout: 500ms
+  datasource:
+    url: jdbc:h2:mem:orders;DB_CLOSE_DELAY=-1
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  threads:
+    virtual:
+      enabled: true
+
+# Required: there is deliberately no default demo password.
+demo:
+  password: ${DEMO_PASSWORD}
+
+zynqo:
+  storage:
+    key-prefix: "zynqo:example:"
+  execution:
+    lease-duration: 30s
+    wait-timeout: 0s
+    on-exception: release
+  retention:
+    completed-ttl: 24h
+    failed-ttl: 24h
+  response:
+    max-body-size: 64KB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    io.github.tanmaysinghx.zynqo: INFO

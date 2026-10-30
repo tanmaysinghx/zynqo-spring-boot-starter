@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs exclusions. Every entry states why the finding does not apply.
+-->
+<FindBugsFilter>
+  <!-- Test sources are not analysed for production defects. -->
+  <Match>
+    <Source name="~.*Test\.java"/>
+  </Match>
+  <Match>
+    <Source name="~.*IT\.java"/>
+  </Match>
+
+  <!--
+    @ConfigurationProperties: Spring Boot's binder populates nested groups and collections
+    through the getters, so they must return the live objects.
+  -->
+  <Match>
+    <Class name="~io\.github\.tanmaysinghx\.zynqo\.autoconfigure\.ZynqoProperties(\$.*)?"/>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+  </Match>
+
+  <!-- java.lang.reflect.Method is an immutable descriptor for this purpose; copying it is not possible. -->
+  <Match>
+    <Class name="io.github.tanmaysinghx.zynqo.autoconfigure.web.ZynqoInvocationContext"/>
+    <Field name="method"/>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+  </Match>
+  <Match>
+    <Class name="io.github.tanmaysinghx.zynqo.autoconfigure.web.ZynqoInvocationContext"/>
+    <Method name="method"/>
+    <Bug pattern="EI_EXPOSE_REP"/>
+  </Match>
+  <Match>
+    <Class name="io.github.tanmaysinghx.zynqo.autoconfigure.web.ZynqoInvocationContext"/>
+    <Method name="&lt;init&gt;"/>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+  </Match>
+</FindBugsFilter>

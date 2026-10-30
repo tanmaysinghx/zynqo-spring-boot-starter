@@ -36,5 +36,16 @@ public record ZynqoInvocationContext(
     Objects.requireNonNull(method, "method");
     Objects.requireNonNull(arguments, "arguments");
     Objects.requireNonNull(operation, "operation");
+    arguments = arguments.clone();
+  }
+
+  /**
+   * Returns a copy of the handler method arguments.
+   *
+   * @return the arguments
+   */
+  @Override
+  public Object[] arguments() {
+    return arguments.clone();
   }
 }

@@ -31,7 +31,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProp
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -78,9 +77,8 @@ public class ZynqoWebMvcAutoConfiguration {
             new AnnotationMatchingPointcut(null, Zynqo.class, true),
             new ZynqoMethodInterceptor(handler::getObject));
     advisor.setOrder(
-        Binder.get(environment)
-            .bind("zynqo.interceptor-order", Integer.class)
-            .orElse(ZynqoProperties.DEFAULT_INTERCEPTOR_ORDER));
+        environment.getProperty(
+            "zynqo.interceptor-order", Integer.class, ZynqoProperties.DEFAULT_INTERCEPTOR_ORDER));
     return advisor;
   }
 

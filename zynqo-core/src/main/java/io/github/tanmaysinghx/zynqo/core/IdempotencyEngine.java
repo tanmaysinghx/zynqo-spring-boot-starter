@@ -28,6 +28,7 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.HexFormat;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
@@ -219,18 +220,18 @@ public final class IdempotencyEngine {
       return new IdempotentResult<>(result, Outcome.NOT_STORED);
     }
 
-    Boolean accepted =
+    Transition completion =
         transition(
             StorageOperation.COMPLETE,
             () -> store.complete(key, token, stored, policy.completedRetention()));
     Outcome outcome;
-    if (accepted == null) {
+    if (completion == Transition.STORE_FAILED) {
       log.error(
           "Operation for {} executed but completion could not be recorded; a retry after the lease"
               + " expires will execute it again unless the application prevents it",
           key);
       outcome = Outcome.COMPLETION_ERROR;
-    } else if (!accepted) {
+    } else if (completion == Transition.REJECTED) {
       log.warn(
           "Operation for {} executed but {} no longer owns the record (lease expired and was taken"
               + " over, or the record expired); the result was not stored",
@@ -253,20 +254,20 @@ public final class IdempotencyEngine {
       log.error("Exception classifier failed; marking record {} failed", key, ex);
       disposition = ExceptionDisposition.MARK_FAILED;
     }
-    Boolean applied =
+    Transition applied =
         switch (disposition) {
           case RELEASE -> transition(StorageOperation.RELEASE, () -> store.release(key, token));
           case MARK_FAILED ->
               transition(
                   StorageOperation.FAIL, () -> store.fail(key, token, policy.failedRetention()));
         };
-    if (applied == null) {
+    if (applied == Transition.STORE_FAILED) {
       log.error(
           "Could not apply {} to {} after the operation failed; the record stays in progress until"
               + " its lease expires",
           disposition,
           key);
-    } else if (!applied) {
+    } else if (applied == Transition.REJECTED) {
       log.warn("Could not apply {} to {}: ownership was lost", disposition, key);
     }
   }
@@ -308,17 +309,24 @@ public final class IdempotencyEngine {
         null);
   }
 
-  /** Runs an ownership-checked transition; returns {@code null} if the store failed. */
-  private Boolean transition(StorageOperation operation, Supplier<Boolean> call) {
+  /** Result of an ownership-checked state transition. */
+  private enum Transition {
+    APPLIED,
+    REJECTED,
+    STORE_FAILED
+  }
+
+  /** Runs an ownership-checked transition, converting store failures into a result. */
+  private Transition transition(StorageOperation operation, BooleanSupplier call) {
     long start = nanoClock.getAsLong();
     try {
-      Boolean applied = call.get();
+      boolean applied = call.getAsBoolean();
       storageObserved(operation, start, true);
-      return applied;
+      return applied ? Transition.APPLIED : Transition.REJECTED;
     } catch (ZynqoStorageException ex) {
       storageObserved(operation, start, false);
       log.error("Idempotency store failed during {}", operation.tagValue(), ex);
-      return null;
+      return Transition.STORE_FAILED;
     }
   }
 

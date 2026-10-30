@@ -116,6 +116,7 @@ public final class RedisIdempotencyStore implements IdempotencyStore {
       String owner,
       Duration lease,
       Duration recordTtl) {
+    byte[][] args = {utf8(fingerprint.value()), utf8(owner), millis(lease), millis(recordTtl)};
     List<?> reply =
         call(
             "claim",
@@ -125,10 +126,7 @@ public final class RedisIdempotencyStore implements IdempotencyStore {
                     RedisSerializer.byteArray(),
                     rawReplies(),
                     List.of(redisKey(key)),
-                    utf8(fingerprint.value()),
-                    utf8(owner),
-                    millis(lease),
-                    millis(recordTtl)));
+                    (Object[]) args));
     try {
       return parseClaim(reply, owner);
     } catch (RuntimeException ex) {
@@ -139,8 +137,16 @@ public final class RedisIdempotencyStore implements IdempotencyStore {
   @Override
   public boolean complete(
       IdempotencyKey key, OwnershipToken token, StoredResponse response, Duration retention) {
-    byte[] headers = HeaderCodec.encode(response.headers());
     byte[] body = response.body();
+    byte[][] args = {
+      utf8(token.owner()),
+      utf8(Long.toString(token.fence())),
+      millis(retention),
+      utf8(Integer.toString(response.status())),
+      HeaderCodec.encode(response.headers()),
+      utf8(body == null ? "0" : "1"),
+      body == null ? new byte[0] : body
+    };
     return applied(
         call(
             "complete",
@@ -150,13 +156,7 @@ public final class RedisIdempotencyStore implements IdempotencyStore {
                     RedisSerializer.byteArray(),
                     rawReplies(),
                     List.of(redisKey(key)),
-                    utf8(token.owner()),
-                    utf8(Long.toString(token.fence())),
-                    millis(retention),
-                    utf8(Integer.toString(response.status())),
-                    headers,
-                    utf8(body == null ? "0" : "1"),
-                    body == null ? new byte[0] : body)));
+                    (Object[]) args)));
   }
 
   @Override
@@ -176,6 +176,7 @@ public final class RedisIdempotencyStore implements IdempotencyStore {
 
   @Override
   public boolean fail(IdempotencyKey key, OwnershipToken token, Duration retention) {
+    byte[][] args = {utf8(token.owner()), utf8(Long.toString(token.fence())), millis(retention)};
     return applied(
         call(
             "fail",
@@ -185,9 +186,7 @@ public final class RedisIdempotencyStore implements IdempotencyStore {
                     RedisSerializer.byteArray(),
                     rawReplies(),
                     List.of(redisKey(key)),
-                    utf8(token.owner()),
-                    utf8(Long.toString(token.fence())),
-                    millis(retention))));
+                    (Object[]) args)));
   }
 
   private static ClaimResult parseClaim(List<?> reply, String owner) {
@@ -220,12 +219,20 @@ public final class RedisIdempotencyStore implements IdempotencyStore {
     return result == 1L;
   }
 
+  /**
+   * Runs a Redis call. Every exception from the client layer is a storage failure: besides {@link
+   * DataAccessException} (connection loss, timeouts) this includes, for example, the {@code
+   * IllegalStateException} a stopped connection factory throws.
+   */
   private static <T> T call(String operation, Supplier<T> call) {
     try {
       return call.get();
     } catch (DataAccessException ex) {
       throw new ZynqoStorageException(
           "Redis " + operation + " failed: " + ex.getClass().getSimpleName(), ex);
+    } catch (RuntimeException ex) {
+      throw new ZynqoStorageException(
+          "Redis " + operation + " failed unexpectedly: " + ex.getClass().getSimpleName(), ex);
     }
   }
 

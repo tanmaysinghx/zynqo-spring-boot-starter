@@ -29,7 +29,7 @@ import org.springframework.util.function.SingletonSupplier;
  */
 final class ZynqoMethodInterceptor implements MethodInterceptor {
 
-  private final Supplier<ZynqoInvocationHandler> handler;
+  private final SingletonSupplier<ZynqoInvocationHandler> handler;
 
   ZynqoMethodInterceptor(Supplier<ZynqoInvocationHandler> handler) {
     this.handler = SingletonSupplier.of(handler);
@@ -37,6 +37,6 @@ final class ZynqoMethodInterceptor implements MethodInterceptor {
 
   @Override
   public Object invoke(MethodInvocation invocation) throws Throwable {
-    return handler.get().invoke(invocation);
+    return handler.obtain().invoke(invocation);
   }
 }
