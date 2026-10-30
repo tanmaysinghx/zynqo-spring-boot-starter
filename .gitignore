@@ -1,0 +1,12 @@
+target/
+.flattened-pom.xml
+*.class
+*.log
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.DS_Store
+dependency-reduced-pom.xml
