@@ -1,0 +1,7 @@
+# Default owner for everything in the repository.
+*                       @tanmaysinghx
+
+# Release and supply-chain configuration require maintainer review.
+/.github/workflows/     @tanmaysinghx
+/pom.xml                @tanmaysinghx
+/scripts/               @tanmaysinghx

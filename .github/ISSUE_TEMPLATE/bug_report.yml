@@ -1,0 +1,35 @@
+name: Bug report
+description: Something does not behave as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report security vulnerabilities here. Follow SECURITY.md instead.
+        Never paste idempotency keys, tokens, credentials or customer data.
+  - type: input
+    id: version
+    attributes:
+      label: Zynqo version
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Java, Spring Boot and Redis versions
+      placeholder: "Java 21, Spring Boot 4.1.2, Redis 7.4"
+    validations:
+      required: true
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: What happened and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Handler signature, relevant zynqo.* configuration, and the request sequence.
+    validations:
+      required: true

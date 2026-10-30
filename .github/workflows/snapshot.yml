@@ -1,0 +1,64 @@
+name: Snapshot
+
+# Publishes -SNAPSHOT builds of main to the Central Portal snapshot repository
+# (https://central.sonatype.com/repository/maven-snapshots/). The central-publishing-maven-plugin
+# routes -SNAPSHOT versions there automatically; release versions are refused below, so a snapshot
+# run can never publish a stable release.
+#
+# Prerequisites (see docs/release-process.md): SNAPSHOT publishing enabled for the namespace in the
+# Central Portal, the CENTRAL_TOKEN_* secrets, and the repository variable
+# CENTRAL_SNAPSHOTS_ENABLED=true. Without the variable this workflow does nothing.
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: true
+
+env:
+  MAVEN_ARGS: -B -ntp
+
+jobs:
+  publish-snapshot:
+    name: Publish snapshot
+    if: >-
+      vars.CENTRAL_SNAPSHOTS_ENABLED == 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment: maven-central-snapshots
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          server-id: central
+          server-username: CENTRAL_TOKEN_USERNAME
+          server-password: CENTRAL_TOKEN_PASSWORD
+      - name: Require a SNAPSHOT version
+        run: |
+          version="$(./mvnw -q -N org.apache.maven.plugins:maven-help-plugin:3.5.2:evaluate \
+            -Dexpression=project.version -DforceStdout)"
+          case "${version}" in
+            *-SNAPSHOT) echo "Publishing ${version}";;
+            *) echo "::error::${version} is not a SNAPSHOT; releases are published only by release.yml"; exit 1;;
+          esac
+      - name: Publish
+        env:
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        run: ./mvnw -Prelease deploy -DskipTests

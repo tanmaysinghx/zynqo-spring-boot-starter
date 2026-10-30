@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  MAVEN_ARGS: -B -ntp -Dstyle.color=always
+
+jobs:
+  validate:
+    name: Validate build configuration and formatting
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      # validate runs the Maven Enforcer rules and the Spotless formatting check.
+      - name: Validate Maven configuration and formatting
+        run: ./mvnw validate
+
+  build:
+    name: Build and test (JDK ${{ matrix.java }})
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['21', '25']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Compile
+        run: ./mvnw compile test-compile
+      - name: Unit tests
+        run: ./mvnw test -Djacoco.skip.check=true
+      # Integration tests use Testcontainers; GitHub-hosted Ubuntu runners provide Docker.
+      - name: Integration tests, coverage gate and packaging
+        run: ./mvnw verify
+      - name: Upload test reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-reports-jdk${{ matrix.java }}
+          path: |
+            **/target/surefire-reports/
+            **/target/failsafe-reports/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Upload coverage reports
+        if: ${{ !cancelled() && matrix.java == '21' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage-reports
+          path: '**/target/site/jacoco/'
+          retention-days: 14
+          if-no-files-found: warn
+
+  static-analysis:
+    name: Static analysis (SpotBugs)
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: SpotBugs
+        run: ./mvnw -Pstatic-analysis verify -DskipTests
+      - name: Upload SpotBugs reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: spotbugs-reports
+          path: '**/target/spotbugsXml.xml'
+          retention-days: 14
+          if-no-files-found: warn
+
+  package:
+    name: Build and validate publishable artifacts
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      # Signs with a throwaway key and builds the Central bundle without uploading it.
+      - name: Release dry run
+        run: scripts/release-dry-run.sh
+      - name: Upload bundle
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: central-bundle-dry-run
+          path: target/central-publishing/central-bundle.zip
+          retention-days: 7
+          if-no-files-found: error

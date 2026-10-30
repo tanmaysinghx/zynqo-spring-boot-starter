@@ -1,0 +1,17 @@
+{
+  "properties": [
+    {
+      "name": "zynqo.response.replay-headers",
+      "defaultValue": ["Location", "Content-Type", "Content-Language", "ETag", "Last-Modified"]
+    }
+  ],
+  "hints": [
+    {
+      "name": "zynqo.execution.on-exception",
+      "values": [
+        {"value": "release", "description": "Delete the record; a retry executes the operation again."},
+        {"value": "mark-failed", "description": "Keep a FAILED record; retries are rejected until it expires."}
+      ]
+    }
+  ]
+}

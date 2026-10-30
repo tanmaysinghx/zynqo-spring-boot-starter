@@ -1,0 +1,41 @@
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      spring-boot:
+        patterns:
+          - "org.springframework.boot:*"
+      maven-plugins:
+        patterns:
+          - "org.apache.maven.plugins:*"
+          - "org.codehaus.mojo:*"
+          - "com.diffplug.spotless:*"
+          - "com.github.spotbugs:*"
+          - "org.jacoco:*"
+          - "org.cyclonedx:*"
+          - "org.sonatype.central:*"
+    ignore:
+      # google-java-format is kept in lockstep with spotless-maven-plugin; see pom.xml.
+      - dependency-name: "com.google.googlejavaformat:google-java-format"
+    labels: [dependencies]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns: ["*"]
+    labels: [dependencies, ci]
+
+  - package-ecosystem: docker-compose
+    directory: /zynqo-examples/zynqo-example-api
+    schedule:
+      interval: monthly
+    labels: [dependencies, examples]
