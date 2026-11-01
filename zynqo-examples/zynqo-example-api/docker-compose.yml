@@ -3,7 +3,7 @@
 #   DEMO_PASSWORD=change-me ../../mvnw spring-boot:run
 services:
   redis:
-    image: redis:7.4-alpine
+    image: redis:8.10-alpine
     # Append-only persistence so completed idempotency records survive a Redis restart.
     command: ["redis-server", "--appendonly", "yes"]
     ports:
