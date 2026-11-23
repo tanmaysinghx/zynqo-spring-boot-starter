@@ -63,7 +63,7 @@
     <project.build.outputTimestamp>2026-10-30T00:00:00Z</project.build.outputTimestamp>
 
     <!-- Platform -->
-    <spring-boot.version>4.1.2</spring-boot.version>
+    <spring-boot.version>4.2.0</spring-boot.version>
 
     <!-- Plugins -->
     <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
